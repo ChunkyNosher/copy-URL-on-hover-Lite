@@ -7,36 +7,204 @@
     <link rel="stylesheet" href="popup.css" />
   </head>
   <body>
-    <main>
-      <header>
-        <h1>Copy URL on Hover <span>Lite</span></h1>
-        <p>Hover a link, then use a shortcut.</p>
+    <main class="control-deck">
+      <header class="masthead">
+        <div class="eyebrow"><span class="signal-dot"></span> Link utility</div>
+        <div class="masthead-copy">
+          <h1>Hover.<br /><em>Copy.</em></h1>
+          <p>Set the stroke. Keep the link.</p>
+        </div>
+        <button
+          id="themeToggle"
+          class="icon-button"
+          type="button"
+          aria-label="Switch color theme"
+          title="Switch color theme"
+        >
+          ◐
+        </button>
       </header>
 
-      <section aria-labelledby="shortcuts-title">
-        <h2 id="shortcuts-title">Shortcuts</h2>
+      <section
+        class="settings-section shortcut-section"
+        aria-labelledby="shortcuts-title"
+      >
+        <div class="section-heading">
+          <div>
+            <p class="section-kicker">Keyboard map</p>
+            <h2 id="shortcuts-title">Capture a shortcut</h2>
+          </div>
+          <p class="section-note">
+            Click a key slot, then press the combination you want.
+          </p>
+        </div>
         <div class="shortcut-list" id="shortcuts"></div>
-        <p class="hint">Leave a key blank to disable that action. Shortcuts do not run while typing in a form field.</p>
       </section>
 
-      <section aria-labelledby="behavior-title">
-        <h2 id="behavior-title">Behavior</h2>
-        <label class="toggle"><input id="cleanTrackingParameters" type="checkbox" /> Remove tracking parameters when copying a URL</label>
-        <label class="toggle"><input id="showNotification" type="checkbox" /> Show copy confirmation</label>
-        <div class="field-row">
-          <label for="notificationColor">Confirmation color</label>
-          <input id="notificationColor" type="color" />
+      <section class="settings-section" aria-labelledby="copy-title">
+        <div class="section-heading compact">
+          <div>
+            <p class="section-kicker">Copy behavior</p>
+            <h2 id="copy-title">Clean the link</h2>
+          </div>
         </div>
-        <div class="field-row">
-          <label for="notificationDuration">Confirmation duration</label>
-          <input id="notificationDuration" type="number" min="500" max="10000" step="100" />
+        <label class="switch-row">
+          <span
+            ><strong>Remove tracking parameters</strong
+            ><small>Keep useful query values such as a product ID.</small></span
+          >
+          <input id="cleanTrackingParameters" type="checkbox" />
+          <span class="switch" aria-hidden="true"></span>
+        </label>
+      </section>
+
+      <section class="settings-section" aria-labelledby="feedback-title">
+        <div class="section-heading compact">
+          <div>
+            <p class="section-kicker">Feedback</p>
+            <h2 id="feedback-title">Copy confirmation</h2>
+          </div>
+          <label class="inline-switch"
+            ><input id="showNotification" type="checkbox" />
+            <span id="notificationToggleLabel">On</span></label
+          >
+        </div>
+
+        <div class="mode-picker" role="group" aria-label="Confirmation style">
+          <label
+            ><input
+              type="radio"
+              name="notificationDisplayMode"
+              value="tooltip"
+            />
+            <span>At pointer</span></label
+          >
+          <label
+            ><input type="radio" name="notificationDisplayMode" value="toast" />
+            <span>Corner toast</span></label
+          >
+        </div>
+
+        <div id="tooltipSettings" class="setting-card">
+          <div class="card-label">Pointer tooltip</div>
+          <div class="control-grid two">
+            <label>Color <input id="tooltipColor" type="color" /></label>
+            <label
+              >Duration
+              <span class="unit-input"
+                ><input
+                  id="tooltipDuration"
+                  type="number"
+                  min="500"
+                  max="10000"
+                  step="100"
+                /><b>ms</b></span
+              ></label
+            >
+          </div>
+          <label class="select-label"
+            >Entrance
+            <select id="tooltipAnimation">
+              <option value="fade">Fade</option>
+              <option value="slide">Slide</option>
+              <option value="bounce">Bounce</option>
+            </select>
+          </label>
+        </div>
+
+        <div id="toastSettings" class="setting-card">
+          <div class="card-label">Corner toast</div>
+          <div class="control-grid two">
+            <label>Color <input id="notifColor" type="color" /></label>
+            <label
+              >Duration
+              <span class="unit-input"
+                ><input
+                  id="notifDuration"
+                  type="number"
+                  min="500"
+                  max="10000"
+                  step="100"
+                /><b>ms</b></span
+              ></label
+            >
+            <label class="select-label"
+              >Placement
+              <select id="notifPosition">
+                <option value="bottom-right">Bottom right</option>
+                <option value="bottom-left">Bottom left</option>
+                <option value="top-right">Top right</option>
+                <option value="top-left">Top left</option>
+              </select>
+            </label>
+            <label class="select-label"
+              >Scale
+              <select id="notifSize">
+                <option value="small">Small</option>
+                <option value="medium">Medium</option>
+                <option value="large">Large</option>
+              </select>
+            </label>
+            <label>Border <input id="notifBorderColor" type="color" /></label>
+            <label
+              >Weight
+              <span class="unit-input"
+                ><input
+                  id="notifBorderWidth"
+                  type="number"
+                  min="0"
+                  max="8"
+                  step="1"
+                /><b>px</b></span
+              ></label
+            >
+          </div>
+          <label class="select-label"
+            >Entrance
+            <select id="notifAnimation">
+              <option value="fade">Fade</option>
+              <option value="slide">Slide</option>
+              <option value="bounce">Bounce</option>
+            </select>
+          </label>
         </div>
       </section>
 
-      <div class="actions">
-        <button id="reset" type="button" class="secondary">Reset defaults</button>
-        <button id="save" type="button">Save settings</button>
-      </div>
+      <section class="settings-section" aria-labelledby="appearance-title">
+        <div class="section-heading compact">
+          <div>
+            <p class="section-kicker">Workspace</p>
+            <h2 id="appearance-title">Appearance</h2>
+          </div>
+        </div>
+        <div class="appearance-row">
+          <label class="switch-row compact-row">
+            <span
+              ><strong>Dark workspace</strong
+              ><small>Use the deep-ink control deck.</small></span
+            >
+            <input id="darkMode" type="checkbox" />
+            <span class="switch" aria-hidden="true"></span>
+          </label>
+          <label class="select-label density-control"
+            >Density
+            <select id="menuSize">
+              <option value="compact">Compact</option>
+              <option value="medium">Balanced</option>
+              <option value="comfortable">Comfortable</option>
+            </select>
+          </label>
+        </div>
+      </section>
+
+      <footer class="actions">
+        <button id="reset" type="button" class="quiet-button">
+          Restore defaults
+        </button>
+        <button id="save" type="button" class="save-button">
+          Save settings <span>↗</span>
+        </button>
+      </footer>
       <p id="status" role="status" aria-live="polite"></p>
     </main>
     <script src="shared.js"></script>
