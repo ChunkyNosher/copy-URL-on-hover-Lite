@@ -5,8 +5,15 @@
 Requires Node.js 22 or newer.
 
 ```powershell
+npm ci
 npm run check
 ```
+
+## Third-party notice
+
+`vendor/vanilla-picker.csp.min.js` and its matching stylesheet are the
+extension-safe CSP build of vanilla-picker 2.12.3. Its ISC license is included
+beside those files in `vendor/vanilla-picker.LICENSE.md`.
 
 For the Firefox manifest and packaging checks, use:
 

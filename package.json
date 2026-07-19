@@ -10,5 +10,8 @@
   },
   "engines": {
     "node": ">=22"
+  },
+  "dependencies": {
+    "vanilla-picker": "2.12.3"
   }
 }

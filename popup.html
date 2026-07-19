@@ -4,26 +4,12 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Copy URL on Hover Lite</title>
+    <link rel="stylesheet" href="vendor/vanilla-picker.csp.css" />
     <link rel="stylesheet" href="popup.css" />
   </head>
   <body>
     <main class="control-deck">
-      <header class="masthead">
-        <div class="eyebrow"><span class="signal-dot"></span> Link utility</div>
-        <div class="masthead-copy">
-          <h1>Hover.<br /><em>Copy.</em></h1>
-          <p>Set the stroke. Keep the link.</p>
-        </div>
-        <button
-          id="themeToggle"
-          class="icon-button"
-          type="button"
-          aria-label="Switch color theme"
-          title="Switch color theme"
-        >
-          ◐
-        </button>
-      </header>
+      <h1 class="sr-only">Copy URL on Hover settings</h1>
 
       <section
         class="settings-section shortcut-section"
@@ -31,11 +17,11 @@
       >
         <div class="section-heading">
           <div>
-            <p class="section-kicker">Keyboard map</p>
-            <h2 id="shortcuts-title">Capture a shortcut</h2>
+            <p class="section-kicker">Shortcuts</p>
+            <h2 id="shortcuts-title">Keyboard controls</h2>
           </div>
           <p class="section-note">
-            Click a key slot, then press the combination you want.
+            Select a key slot, then press the combination you want.
           </p>
         </div>
         <div class="shortcut-list" id="shortcuts"></div>
@@ -45,7 +31,7 @@
         <div class="section-heading compact">
           <div>
             <p class="section-kicker">Copy behavior</p>
-            <h2 id="copy-title">Clean the link</h2>
+            <h2 id="copy-title">URL cleanup</h2>
           </div>
         </div>
         <label class="switch-row">
@@ -88,7 +74,20 @@
         <div id="tooltipSettings" class="setting-card">
           <div class="card-label">Pointer tooltip</div>
           <div class="control-grid two">
-            <label>Color <input id="tooltipColor" type="color" /></label>
+            <div class="color-field">
+              <span class="field-label">Color</span>
+              <div
+                id="tooltipColor"
+                class="color-swatch"
+                role="button"
+                tabindex="0"
+                aria-label="Choose tooltip color"
+              >
+                <span class="color-preview" aria-hidden="true"></span>
+                <code></code>
+                <span class="color-chevron" aria-hidden="true">⌄</span>
+              </div>
+            </div>
             <label
               >Duration
               <span class="unit-input"
@@ -115,7 +114,20 @@
         <div id="toastSettings" class="setting-card">
           <div class="card-label">Corner toast</div>
           <div class="control-grid two">
-            <label>Color <input id="notifColor" type="color" /></label>
+            <div class="color-field">
+              <span class="field-label">Color</span>
+              <div
+                id="notifColor"
+                class="color-swatch"
+                role="button"
+                tabindex="0"
+                aria-label="Choose toast color"
+              >
+                <span class="color-preview" aria-hidden="true"></span>
+                <code></code>
+                <span class="color-chevron" aria-hidden="true">⌄</span>
+              </div>
+            </div>
             <label
               >Duration
               <span class="unit-input"
@@ -145,7 +157,20 @@
                 <option value="large">Large</option>
               </select>
             </label>
-            <label>Border <input id="notifBorderColor" type="color" /></label>
+            <div class="color-field">
+              <span class="field-label">Border</span>
+              <div
+                id="notifBorderColor"
+                class="color-swatch"
+                role="button"
+                tabindex="0"
+                aria-label="Choose toast border color"
+              >
+                <span class="color-preview" aria-hidden="true"></span>
+                <code></code>
+                <span class="color-chevron" aria-hidden="true">⌄</span>
+              </div>
+            </div>
             <label
               >Weight
               <span class="unit-input"
@@ -207,6 +232,7 @@
       </footer>
       <p id="status" role="status" aria-live="polite"></p>
     </main>
+    <script src="vendor/vanilla-picker.csp.min.js"></script>
     <script src="shared.js"></script>
     <script src="popup.js"></script>
   </body>

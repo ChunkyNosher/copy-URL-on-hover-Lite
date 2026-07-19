@@ -15,7 +15,7 @@ background coordinator, header rewriting, or site-specific handler catalog.
   `data-href` / `data-url` / `data-link` patterns without guessing from a page.
 - Configure shortcuts, tracking removal, and confirmations from the toolbar popup.
 - Record shortcuts directly: click a shortcut key slot and press the complete combination.
-- Customize pointer tooltips or corner toasts, including color, timing, animation, placement, size, and border; choose a dark or light workspace and density.
+- Customize pointer tooltips or corner toasts, including an in-panel gradient color picker, timing, animation, placement, size, and border; choose a dark or light workspace and density.
 
 The extension never runs shortcuts while a text field or editable control is
 focused. It does not inject frames, change response headers, inspect tabs, or
