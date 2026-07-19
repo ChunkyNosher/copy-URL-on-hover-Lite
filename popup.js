@@ -7,6 +7,8 @@
   const status = document.querySelector("#status");
   let settings = core.normalizeSettings();
   let recordingAction = null;
+  const colorPickers = new Map();
+  const COLOR_FIELDS = ["tooltipColor", "notifColor", "notifBorderColor"];
 
   const ACTIONS = [
     ["copyUrl", "Copy cleaned URL", "Removes tracking parameters when enabled"],
@@ -87,6 +89,52 @@
     );
   }
 
+  function updateColorSwatch(key, color) {
+    const swatch = document.querySelector(`#${key}`);
+    swatch.querySelector(".color-preview").style.backgroundColor = color;
+    swatch.querySelector("code").textContent = color.toUpperCase();
+  }
+
+  function initializeColorPickers() {
+    if (typeof Picker !== "function") {
+      setStatus("Color controls could not load. Reload the extension.", true);
+      return;
+    }
+    for (const key of COLOR_FIELDS) {
+      const swatch = document.querySelector(`#${key}`);
+      const picker = new Picker({
+        parent: swatch,
+        popup: "bottom",
+        color: settings[key],
+        alpha: false,
+        editor: true,
+        editorFormat: "hex",
+        onChange(color) {
+          settings[key] = color.printHex(false);
+          updateColorSwatch(key, settings[key]);
+        },
+        onDone(color) {
+          settings[key] = color.printHex(false);
+          updateColorSwatch(key, settings[key]);
+        },
+      });
+      colorPickers.set(key, picker);
+      swatch.addEventListener("keydown", (event) => {
+        if (event.key !== "Enter" && event.key !== " ") return;
+        event.preventDefault();
+        swatch.click();
+      });
+      updateColorSwatch(key, settings[key]);
+    }
+  }
+
+  function syncColorPickers() {
+    for (const key of COLOR_FIELDS) {
+      colorPickers.get(key)?.setColor(settings[key], true);
+      updateColorSwatch(key, settings[key]);
+    }
+  }
+
   function syncThemeAndDensity() {
     document.documentElement.dataset.theme = settings.darkMode
       ? "dark"
@@ -113,14 +161,11 @@
       `input[name="notificationDisplayMode"][value="${settings.notificationDisplayMode}"]`,
     ).checked = true;
     for (const key of [
-      "tooltipColor",
       "tooltipDuration",
       "tooltipAnimation",
-      "notifColor",
       "notifDuration",
       "notifPosition",
       "notifSize",
-      "notifBorderColor",
       "notifBorderWidth",
       "notifAnimation",
       "menuSize",
@@ -128,6 +173,7 @@
       document.querySelector(`#${key}`).value = settings[key];
     }
     document.querySelector("#darkMode").checked = settings.darkMode;
+    syncColorPickers();
     syncThemeAndDensity();
     toggleFeedbackPanels();
   }
@@ -196,14 +242,11 @@
       'input[name="notificationDisplayMode"]:checked',
     ).value;
     for (const key of [
-      "tooltipColor",
       "tooltipDuration",
       "tooltipAnimation",
-      "notifColor",
       "notifDuration",
       "notifPosition",
       "notifSize",
-      "notifBorderColor",
       "notifBorderWidth",
       "notifAnimation",
       "menuSize",
@@ -266,14 +309,6 @@
     render(core.normalizeSettings());
     setStatus("Defaults restored. Save to apply them.");
   });
-  document.querySelector("#themeToggle").addEventListener("click", () => {
-    settings.darkMode = !settings.darkMode;
-    document.querySelector("#darkMode").checked = settings.darkMode;
-    syncThemeAndDensity();
-    setStatus(
-      `${settings.darkMode ? "Dark" : "Light"} workspace selected. Save to keep it.`,
-    );
-  });
   document.querySelector("#darkMode").addEventListener("change", (event) => {
     settings.darkMode = event.target.checked;
     syncThemeAndDensity();
@@ -298,6 +333,8 @@
         toggleFeedbackPanels();
       });
     });
+
+  initializeColorPickers();
 
   void load().catch((error) => {
     render(core.normalizeSettings());
