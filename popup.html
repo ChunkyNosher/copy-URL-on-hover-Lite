@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Copy URL on Hover Lite</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <main>
+      <header>
+        <h1>Copy URL on Hover <span>Lite</span></h1>
+        <p>Hover a link, then use a shortcut.</p>
+      </header>
+
+      <section aria-labelledby="shortcuts-title">
+        <h2 id="shortcuts-title">Shortcuts</h2>
+        <div class="shortcut-list" id="shortcuts"></div>
+        <p class="hint">Leave a key blank to disable that action. Shortcuts do not run while typing in a form field.</p>
+      </section>
+
+      <section aria-labelledby="behavior-title">
+        <h2 id="behavior-title">Behavior</h2>
+        <label class="toggle"><input id="cleanTrackingParameters" type="checkbox" /> Remove tracking parameters when copying a URL</label>
+        <label class="toggle"><input id="showNotification" type="checkbox" /> Show copy confirmation</label>
+        <div class="field-row">
+          <label for="notificationColor">Confirmation color</label>
+          <input id="notificationColor" type="color" />
+        </div>
+        <div class="field-row">
+          <label for="notificationDuration">Confirmation duration</label>
+          <input id="notificationDuration" type="number" min="500" max="10000" step="100" />
+        </div>
+      </section>
+
+      <div class="actions">
+        <button id="reset" type="button" class="secondary">Reset defaults</button>
+        <button id="save" type="button">Save settings</button>
+      </div>
+      <p id="status" role="status" aria-live="polite"></p>
+    </main>
+    <script src="shared.js"></script>
+    <script src="popup.js"></script>
+  </body>
+</html>
