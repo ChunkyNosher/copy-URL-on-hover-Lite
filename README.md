@@ -30,6 +30,20 @@ npm run check
 To test it in Firefox, open `about:debugging#/runtime/this-firefox`, choose
 **Load Temporary Add-on**, and select [manifest.json](manifest.json).
 
+## Releases
+
+Publishing a GitHub Release triggers
+[Build Firefox release](.github/workflows/release.yml). The tag must match the
+version in `manifest.json`, with an optional leading `v` (for example,
+`v1.2.0` for version `1.2.0`). The workflow validates the project, runs
+`web-ext lint`, and uploads an `-unsigned.xpi` archive plus `SHA256SUMS.txt` to
+that release.
+
+For an installable release build, add repository secrets `AMO_JWT_ISSUER` and
+`AMO_JWT_SECRET`, created from an AMO API credential with unlisted submission
+access. The workflow will then also upload the AMO-signed `.xpi`. The unsigned
+archive remains useful for inspection and temporary development loading.
+
 ## Product boundaries
 
 The original project’s large catalog of per-site URL handlers was replaced with

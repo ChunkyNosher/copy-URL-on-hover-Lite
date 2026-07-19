@@ -1,0 +1,76 @@
+name: Build Firefox release
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  package:
+    name: Validate and package
+    runs-on: ubuntu-latest
+    env:
+      AMO_JWT_ISSUER: ${{ secrets.AMO_JWT_ISSUER }}
+      AMO_JWT_SECRET: ${{ secrets.AMO_JWT_SECRET }}
+      RELEASE_TAG: ${{ github.event.release.tag_name }}
+
+    steps:
+      - name: Check out the release tag
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.tag_name }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Verify the release tag matches manifest.json
+        shell: bash
+        run: |
+          manifest_version="$(node -e "process.stdout.write(JSON.parse(require('node:fs').readFileSync('manifest.json', 'utf8')).version)")"
+          release_version="$RELEASE_TAG"
+          release_version="${release_version#v}"
+          test "$manifest_version" = "$release_version" || {
+            echo "Release tag ($RELEASE_TAG) must match manifest.json ($manifest_version), optionally prefixed with v."
+            exit 1
+          }
+
+      - name: Run project checks
+        run: npm run check
+
+      - name: Lint the Firefox extension
+        run: npx --yes web-ext@9.1.0 lint --source-dir .
+
+      - name: Build unsigned XPI archive
+        shell: bash
+        run: |
+          npx --yes web-ext@9.1.0 build --source-dir . --artifacts-dir web-ext-artifacts --overwrite-dest
+          mkdir -p release-assets
+          package="$(find web-ext-artifacts -maxdepth 1 -type f -name '*.zip' -print -quit)"
+          test -n "$package"
+          version="$(node -e "process.stdout.write(JSON.parse(require('node:fs').readFileSync('manifest.json', 'utf8')).version)")"
+          cp "$package" "release-assets/Copy-URL-on-Hover-Lite-$version-unsigned.xpi"
+
+      - name: Sign unlisted XPI with AMO
+        if: env.AMO_JWT_ISSUER != '' && env.AMO_JWT_SECRET != ''
+        shell: bash
+        run: |
+          npx --yes web-ext@9.1.0 sign --channel=unlisted --source-dir . --artifacts-dir signed-artifacts --api-key "$AMO_JWT_ISSUER" --api-secret "$AMO_JWT_SECRET"
+          signed_package="$(find signed-artifacts -maxdepth 1 -type f -name '*.xpi' -print -quit)"
+          test -n "$signed_package"
+          version="$(node -e "process.stdout.write(JSON.parse(require('node:fs').readFileSync('manifest.json', 'utf8')).version)")"
+          cp "$signed_package" "release-assets/Copy-URL-on-Hover-Lite-$version.xpi"
+
+      - name: Create release checksums
+        shell: bash
+        run: |
+          cd release-assets
+          sha256sum *.xpi > SHA256SUMS.txt
+
+      - name: Upload release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "$RELEASE_TAG" release-assets/* --clobber
