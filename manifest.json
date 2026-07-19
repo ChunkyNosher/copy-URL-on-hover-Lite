@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Copy URL on Hover Lite",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Copy cleaned URLs, raw URLs, or link text from the link under your pointer.",
   "permissions": ["storage", "clipboardWrite"],
   "host_permissions": ["<all_urls>"],
