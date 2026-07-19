@@ -4,8 +4,10 @@ import test from "node:test";
 await import("../shared.js");
 const {
   cleanUrl,
+  isEditableEvent,
   matchesShortcut,
   normalizeSettings,
+  resolveLink,
   shortcutFromKeyboardEvent,
 } = globalThis.CopyUrlHoverLite;
 
@@ -68,6 +70,72 @@ test("shortcut matching requires an exact modifier match and ignores repeats", (
       shortcut,
     ),
     false,
+  );
+});
+
+test("editable controls in a composed event path suppress shortcuts", () => {
+  const host = {
+    matches: () => false,
+    closest: () => null,
+  };
+  const input = {
+    matches: (selector) => selector.includes("input"),
+    closest: () => null,
+  };
+
+  assert.equal(
+    isEditableEvent(
+      {
+        target: host,
+        composedPath: () => [host, input],
+      },
+      { activeElement: host },
+    ),
+    true,
+  );
+});
+
+test("editable controls inside an active shadow root suppress shortcuts", () => {
+  const input = {
+    matches: (selector) => selector.includes("input"),
+    closest: () => null,
+  };
+  const host = {
+    matches: () => false,
+    closest: () => null,
+    shadowRoot: { activeElement: input },
+  };
+
+  assert.equal(
+    isEditableEvent({ target: host }, { activeElement: host }),
+    true,
+  );
+});
+
+test("role-link cards resolve their semantic data URL", () => {
+  const card = {
+    dataset: { href: "/OpenAI/status/123" },
+    getAttribute: () => null,
+    matches: (selector) => selector === '[role="link"]',
+  };
+  const child = {
+    dataset: {},
+    getAttribute: () => null,
+    matches: () => false,
+  };
+
+  assert.deepEqual(
+    resolveLink(
+      {
+        target: child,
+        composedPath: () => [child, card],
+      },
+      "https://x.com/home",
+    ),
+    {
+      url: "https://x.com/OpenAI/status/123",
+      element: card,
+    },
   );
 });
 

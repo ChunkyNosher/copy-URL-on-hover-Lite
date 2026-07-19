@@ -33,6 +33,9 @@
   const NOTIFICATION_SIZES = new Set(["small", "medium", "large"]);
   const ANIMATIONS = new Set(["fade", "slide", "bounce"]);
   const MENU_SIZES = new Set(["compact", "medium", "comfortable"]);
+  const EDITABLE_SELECTOR =
+    'input, textarea, select, [contenteditable]:not([contenteditable="false"]), [role="textbox"], [role="searchbox"], [role="combobox"]';
+  const DIRECT_LINK_SELECTOR = "a[href], area[href]";
 
   const TRACKING_PARAMETERS = new Set([
     "fbclid",
@@ -143,6 +146,81 @@
       return "";
     }
     return key.toLowerCase();
+  }
+
+  function isEditableElement(element) {
+    return Boolean(
+      element?.matches?.(EDITABLE_SELECTOR) ||
+        element?.closest?.(EDITABLE_SELECTOR),
+    );
+  }
+
+  function isEditableEvent(event, documentRef = globalThis.document) {
+    const path =
+      typeof event?.composedPath === "function"
+        ? event.composedPath()
+        : [event?.target];
+    if (path.some(isEditableElement)) return true;
+
+    const visited = new Set();
+    let activeElement = documentRef?.activeElement;
+    while (activeElement && !visited.has(activeElement)) {
+      if (isEditableElement(activeElement)) return true;
+      visited.add(activeElement);
+      activeElement = activeElement.shadowRoot?.activeElement;
+    }
+    return false;
+  }
+
+  function safeUrl(value, baseUrl) {
+    try {
+      const url = new URL(value, baseUrl);
+      return ["javascript:", "data:", "vbscript:"].includes(url.protocol)
+        ? null
+        : url.href;
+    } catch {
+      return null;
+    }
+  }
+
+  function urlFromElement(element, baseUrl) {
+    if (!element?.matches) return null;
+
+    if (element.matches(DIRECT_LINK_SELECTOR)) {
+      return safeUrl(
+        element.href || element.getAttribute?.("href"),
+        baseUrl,
+      );
+    }
+
+    const candidate =
+      element.dataset?.href ||
+      element.dataset?.url ||
+      element.getAttribute?.("data-link");
+    const dataUrl = candidate && safeUrl(candidate, baseUrl);
+    if (dataUrl) return dataUrl;
+    return null;
+  }
+
+  function resolveLink(event, baseUrl = globalThis.location?.href) {
+    const path =
+      typeof event?.composedPath === "function"
+        ? event.composedPath()
+        : [event?.target];
+    for (const node of path) {
+      const url = urlFromElement(node, baseUrl);
+      if (url) return { url, element: node };
+    }
+
+    const target =
+      event?.target?.nodeType === 1
+        ? event.target
+        : event?.target?.parentElement;
+    const link = target?.closest?.(
+      `${DIRECT_LINK_SELECTOR}, [role="link"]`,
+    );
+    const url = urlFromElement(link, baseUrl);
+    return url ? { url, element: link } : null;
   }
 
   function normalizeShortcut(value, fallback) {
@@ -328,8 +406,10 @@
   globalThis.CopyUrlHoverLite = Object.freeze({
     DEFAULT_SETTINGS,
     cleanUrl,
+    isEditableEvent,
     matchesShortcut,
     normalizeSettings,
+    resolveLink,
     shortcutLabel,
     shortcutFromKeyboardEvent,
   });

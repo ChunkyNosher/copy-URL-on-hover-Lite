@@ -12,55 +12,6 @@
   let notificationTimer = null;
   let pointerPosition = { x: 24, y: 24 };
 
-  function isEditable(element) {
-    return Boolean(
-      element?.closest?.(
-        'input, textarea, select, [contenteditable]:not([contenteditable="false"]), [role="textbox"], [role="searchbox"], [role="combobox"]',
-      ),
-    );
-  }
-
-  function isSafeUrl(value) {
-    try {
-      const url = new URL(value, window.location.href);
-      return !["javascript:", "data:", "vbscript:"].includes(url.protocol);
-    } catch {
-      return false;
-    }
-  }
-
-  function urlFromElement(element) {
-    if (!(element instanceof Element)) return null;
-    if (element.matches("a[href], area[href]") && isSafeUrl(element.href))
-      return element.href;
-
-    const candidate =
-      element.dataset.href ||
-      element.dataset.url ||
-      element.getAttribute("data-link");
-    if (!candidate || !isSafeUrl(candidate)) return null;
-    return new URL(candidate, window.location.href).href;
-  }
-
-  function resolveLink(event) {
-    const path =
-      typeof event.composedPath === "function"
-        ? event.composedPath()
-        : [event.target];
-    for (const node of path) {
-      const url = urlFromElement(node);
-      if (url) return { url, element: node };
-    }
-
-    const target =
-      event.target instanceof Element
-        ? event.target
-        : event.target?.parentElement;
-    const anchor = target?.closest?.("a[href], area[href]");
-    const url = urlFromElement(anchor);
-    return url ? { url, element: anchor } : null;
-  }
-
   function textFromElement(element) {
     if (!element) return "";
     const anchor = element.closest?.("a[href], area[href]") || element;
@@ -208,15 +159,15 @@
     "pointerover",
     (event) => {
       pointerPosition = { x: event.clientX, y: event.clientY };
-      hoveredLink = resolveLink(event);
+      hoveredLink = core.resolveLink(event, window.location.href);
     },
     true,
   );
 
-  document.addEventListener(
+  window.addEventListener(
     "keydown",
     (event) => {
-      if (isEditable(event.target)) return;
+      if (core.isEditableEvent(event, document)) return;
       for (const action of ["copyUrl", "copyRawUrl", "copyText", "openLink"]) {
         if (core.matchesShortcut(event, settings[action])) {
           event.preventDefault();
