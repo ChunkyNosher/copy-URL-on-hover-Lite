@@ -139,6 +139,114 @@ test("role-link cards resolve their semantic data URL", () => {
   );
 });
 
+test("unrelated data attributes are not treated as links", () => {
+  const wrapper = {
+    dataset: { href: "/not-a-link" },
+    getAttribute: () => null,
+    matches: () => false,
+  };
+
+  assert.equal(
+    resolveLink(
+      {
+        target: wrapper,
+        composedPath: () => [wrapper],
+      },
+      "https://example.com/",
+    ),
+    null,
+  );
+});
+
+test("placeholder anchors fall through to their safe data URL", () => {
+  const anchor = {
+    dataset: { href: "/real-destination" },
+    getAttribute: (name) =>
+      name === "href" ? "javascript:void(0)" : null,
+    href: "javascript:void(0)",
+    matches: (selector) => selector.includes("a[href]"),
+  };
+
+  assert.deepEqual(
+    resolveLink(
+      {
+        target: anchor,
+        composedPath: () => [anchor],
+      },
+      "https://example.com/base/",
+    ),
+    {
+      url: "https://example.com/real-destination",
+      element: anchor,
+    },
+  );
+});
+
+test("article bodies resolve through their timestamp permalink", () => {
+  const anchor = {
+    dataset: {},
+    getAttribute: (name) =>
+      name === "href" ? "/OpenAI/status/123" : null,
+    href: "",
+    matches: (selector) => selector.includes("a[href]"),
+  };
+  const timestamp = {
+    closest: (selector) => (selector === "a[href]" ? anchor : null),
+  };
+  const article = {
+    matches: (selector) => selector.includes("article"),
+    querySelector: (selector) =>
+      selector === "a[href] time" ? timestamp : null,
+  };
+  const body = {
+    dataset: {},
+    getAttribute: () => null,
+    matches: () => false,
+  };
+
+  assert.deepEqual(
+    resolveLink(
+      {
+        target: body,
+        composedPath: () => [body, article],
+      },
+      "https://x.com/home",
+    ),
+    {
+      url: "https://x.com/OpenAI/status/123",
+      element: article,
+    },
+  );
+});
+
+test("point-only resolution climbs from an article to its link card", () => {
+  const card = {
+    dataset: { href: "/OpenAI/status/456" },
+    getAttribute: () => null,
+    matches: (selector) => selector.includes('[role="link"]'),
+    closest() {
+      return this;
+    },
+  };
+  const article = {
+    matches: (selector) => selector.includes("article"),
+    parentElement: card,
+    querySelector: () => null,
+  };
+  const body = {
+    nodeType: 1,
+    closest: () => article,
+  };
+
+  assert.deepEqual(
+    resolveLink({ target: body }, "https://x.com/home"),
+    {
+      url: "https://x.com/OpenAI/status/456",
+      element: card,
+    },
+  );
+});
+
 test("normalizeSettings accepts named keys and rejects malformed visual values", () => {
   const settings = normalizeSettings({
     copyUrl: { key: "F8" },

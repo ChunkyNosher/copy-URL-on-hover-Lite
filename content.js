@@ -11,6 +11,7 @@
   let notificationPanel = null;
   let notificationTimer = null;
   let pointerPosition = { x: 24, y: 24 };
+  let hasPointerPosition = false;
 
   function textFromElement(element) {
     if (!element) return "";
@@ -155,11 +156,26 @@
     notify(copied ? `Copied ${label}.` : `Could not copy ${label}.`, copied);
   }
 
+  function refreshHoveredLink() {
+    if (!hasPointerPosition) return;
+    const pointerTarget = document.elementFromPoint?.(
+      pointerPosition.x,
+      pointerPosition.y,
+    );
+    if (pointerTarget) {
+      hoveredLink = core.resolveLink(
+        { target: pointerTarget },
+        document.baseURI,
+      );
+    }
+  }
+
   document.addEventListener(
     "pointerover",
     (event) => {
       pointerPosition = { x: event.clientX, y: event.clientY };
-      hoveredLink = core.resolveLink(event, window.location.href);
+      hasPointerPosition = true;
+      hoveredLink = core.resolveLink(event, document.baseURI);
     },
     true,
   );
@@ -171,6 +187,8 @@
       for (const action of ["copyUrl", "copyRawUrl", "copyText", "openLink"]) {
         if (core.matchesShortcut(event, settings[action])) {
           event.preventDefault();
+          event.stopImmediatePropagation();
+          refreshHoveredLink();
           void perform(action);
           return;
         }

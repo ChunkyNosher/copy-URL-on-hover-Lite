@@ -36,6 +36,8 @@
   const EDITABLE_SELECTOR =
     'input, textarea, select, [contenteditable]:not([contenteditable="false"]), [role="textbox"], [role="searchbox"], [role="combobox"]';
   const DIRECT_LINK_SELECTOR = "a[href], area[href]";
+  const ARTICLE_SELECTOR = 'article, [role="article"]';
+  const RESOLVABLE_SELECTOR = `${DIRECT_LINK_SELECTOR}, [role="link"], ${ARTICLE_SELECTOR}`;
 
   const TRACKING_PARAMETERS = new Set([
     "fbclid",
@@ -186,12 +188,16 @@
   function urlFromElement(element, baseUrl) {
     if (!element?.matches) return null;
 
-    if (element.matches(DIRECT_LINK_SELECTOR)) {
-      return safeUrl(
+    const isDirectLink = element.matches(DIRECT_LINK_SELECTOR);
+    if (isDirectLink) {
+      const directUrl = safeUrl(
         element.href || element.getAttribute?.("href"),
         baseUrl,
       );
+      if (directUrl) return directUrl;
     }
+
+    if (!isDirectLink && !element.matches('[role="link"]')) return null;
 
     const candidate =
       element.dataset?.href ||
@@ -202,13 +208,25 @@
     return null;
   }
 
+  function urlFromArticle(element, baseUrl) {
+    if (!element?.matches?.(ARTICLE_SELECTOR)) return null;
+    const timestampAnchor = element
+      .querySelector?.("a[href] time")
+      ?.closest?.("a[href]");
+    return urlFromElement(timestampAnchor, baseUrl);
+  }
+
+  function urlFromNode(node, baseUrl) {
+    return urlFromElement(node, baseUrl) || urlFromArticle(node, baseUrl);
+  }
+
   function resolveLink(event, baseUrl = globalThis.location?.href) {
     const path =
       typeof event?.composedPath === "function"
         ? event.composedPath()
         : [event?.target];
     for (const node of path) {
-      const url = urlFromElement(node, baseUrl);
+      const url = urlFromNode(node, baseUrl);
       if (url) return { url, element: node };
     }
 
@@ -216,11 +234,13 @@
       event?.target?.nodeType === 1
         ? event.target
         : event?.target?.parentElement;
-    const link = target?.closest?.(
-      `${DIRECT_LINK_SELECTOR}, [role="link"]`,
-    );
-    const url = urlFromElement(link, baseUrl);
-    return url ? { url, element: link } : null;
+    let candidate = target?.closest?.(RESOLVABLE_SELECTOR);
+    while (candidate) {
+      const url = urlFromNode(candidate, baseUrl);
+      if (url) return { url, element: candidate };
+      candidate = candidate.parentElement?.closest?.(RESOLVABLE_SELECTOR);
+    }
+    return null;
   }
 
   function normalizeShortcut(value, fallback) {
